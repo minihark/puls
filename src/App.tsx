@@ -191,7 +191,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6 space-y-6 min-w-0 overflow-hidden">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6 space-y-6 min-w-0">
         
         {/* Consensus Heartbeat & Market Dynamics */}
         <HeroPulse
