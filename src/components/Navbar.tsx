@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Volume2, VolumeX, Sparkles, Radio } from 'lucide-react';
+import { Activity, Volume2, VolumeX, Sparkles, Radio, Layers } from 'lucide-react';
 import { playClick } from '../utils/audio';
 
 interface NavbarProps {
@@ -89,6 +89,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             ))}
           </div>
+
+          {/* Link to sister app Knippa */}
+          <a
+            href="https://knippa.apps.harkco.se"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-puls-900 hover:bg-puls-850 border border-puls-800 text-puls-300 hover:text-white transition-colors text-xs font-mono"
+            title="Tactile Atomic Batch Dispatcher for XRPL"
+          >
+            <Layers className="w-3.5 h-3.5 text-amber-xrp" />
+            <span>Knippa ↗</span>
+          </a>
 
           {/* Audio Mute/Unmute Button */}
           <button

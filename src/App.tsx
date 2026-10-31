@@ -6,6 +6,7 @@ import { DexAmmPanel } from './components/DexAmmPanel';
 import { LiveWhaleRadar } from './components/LiveWhaleRadar';
 import { AmendmentsPanel } from './components/AmendmentsPanel';
 import { ProUpgradeModal } from './components/ProUpgradeModal';
+import { X, Landmark, Droplets, FileCode2, Layers } from 'lucide-react';
 
 import {
   LedgerData,
@@ -23,7 +24,9 @@ import {
   fetchAmendments,
 } from './utils/api';
 import { XrplTelemetryStream } from './utils/xrplStream';
-import { setAudioMuted, getAudioMuted, playClick } from './utils/audio';
+import { setAudioMuted, playClick } from './utils/audio';
+
+type ActiveDrawer = 'rlusd' | 'amm' | 'amendments' | null;
 
 export const App: React.FC = () => {
   // Telemetry stream & connection
@@ -36,6 +39,7 @@ export const App: React.FC = () => {
     return localStorage.getItem('puls_pro') === 'true';
   });
   const [isProModalOpen, setIsProModalOpen] = useState<boolean>(false);
+  const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>(null);
 
   // Live consensus state
   const [ledger, setLedger] = useState<LedgerData | null>(null);
@@ -190,48 +194,153 @@ export const App: React.FC = () => {
         isPro={isPro}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6 space-y-6 min-w-0">
+      {/* Main Single-Screen Telemetry Console */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 space-y-4 min-w-0">
         
-        {/* Consensus Heartbeat & Market Dynamics */}
-        <HeroPulse
-          ledger={ledger}
-          ledgerInterval={ledgerInterval}
-          currentTps={currentTps}
-          averageTps={averageTps}
-          market={market}
-          currency={currency}
-          isPulsing={isPulsing}
-          cumulativeBurnDrops={stats.cumulativeBurnDrops}
-        />
+        {/* Primary Telemetry Cockpit (Hero Pulse Core + Live Whale Radar) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          
+          {/* Left 7 Columns: Master Consensus Pulse */}
+          <div className="lg:col-span-7">
+            <HeroPulse
+              ledger={ledger}
+              ledgerInterval={ledgerInterval}
+              currentTps={currentTps}
+              averageTps={averageTps}
+              market={market}
+              currency={currency}
+              isPulsing={isPulsing}
+              cumulativeBurnDrops={stats.cumulativeBurnDrops}
+            />
+          </div>
 
-        {/* Institutional RLUSD Stablecoin Adoption */}
-        <RlusdTracker metrics={rlusdMetrics} />
+          {/* Right 5 Columns: Live Whale & Transaction Radar */}
+          <div className="lg:col-span-5">
+            <LiveWhaleRadar
+              transactions={transactions}
+              whaleCount={stats.whaleCount24h}
+            />
+          </div>
 
-        {/* Native DEX & AMM Intelligence */}
-        <DexAmmPanel
-          pools={ammPools}
-          totalXrpLocked={totalXrpLocked}
-          xrpPriceUsd={market.priceUsd}
-          txDistribution={stats.txDistribution}
-          totalSampled={stats.totalSampled}
-          onRefresh={loadAmmAndAdoption}
-          isLoading={isAmmLoading}
-        />
+        </div>
 
-        {/* Live Whale Radar & Transaction Stream */}
-        <LiveWhaleRadar
-          transactions={transactions}
-          whaleCount={stats.whaleCount24h}
-        />
+        {/* Secondary Telemetry Dock (Tactile Drawers) */}
+        <div className="telemetry-card rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border border-puls-800">
+          <div className="flex items-center gap-2 text-xs font-mono text-puls-400">
+            <span className="w-2 h-2 rounded-full bg-cyan-glow animate-pulse" />
+            <span className="uppercase tracking-wider font-semibold">Institutional Telemetry Drawers:</span>
+          </div>
 
-        {/* Protocol Amendments & Consensus Upgrades */}
-        <AmendmentsPanel amendments={amendments} />
+          <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+            {/* RLUSD Drawer Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                playClick();
+                setActiveDrawer('rlusd');
+              }}
+              className="btn-tactile px-3 py-1.5 rounded-lg bg-puls-900 hover:bg-puls-850 border border-puls-700 text-puls-200 flex items-center gap-1.5 shadow-xs"
+            >
+              <Landmark className="w-3.5 h-3.5 text-cyan-glow" />
+              <span>RLUSD (${(rlusdMetrics.supply / 1000000000).toFixed(2)}B)</span>
+            </button>
+
+            {/* AMM Drawer Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                playClick();
+                setActiveDrawer('amm');
+              }}
+              className="btn-tactile px-3 py-1.5 rounded-lg bg-puls-900 hover:bg-puls-850 border border-puls-700 text-puls-200 flex items-center gap-1.5 shadow-xs"
+            >
+              <Droplets className="w-3.5 h-3.5 text-emerald-400" />
+              <span>AMM Pools ({ammPools.length > 0 ? `${ammPools.length} Pools` : 'DEX'})</span>
+            </button>
+
+            {/* Amendments Drawer Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                playClick();
+                setActiveDrawer('amendments');
+              }}
+              className="btn-tactile px-3 py-1.5 rounded-lg bg-puls-900 hover:bg-puls-850 border border-puls-700 text-puls-200 flex items-center gap-1.5 shadow-xs"
+            >
+              <FileCode2 className="w-3.5 h-3.5 text-amber-xrp" />
+              <span>Amendments ({amendments.length})</span>
+            </button>
+          </div>
+        </div>
 
       </main>
 
+      {/* Drawer Overlay Modal */}
+      {activeDrawer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-5xl bg-puls-950 border border-puls-700 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            
+            {/* Drawer Header */}
+            <div className="p-4 bg-puls-900 border-b border-puls-800 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-glow" />
+                <h3 className="font-mono font-bold text-sm text-white uppercase tracking-wider">
+                  {activeDrawer === 'rlusd' && 'Institutional RLUSD Stablecoin Adoption'}
+                  {activeDrawer === 'amm' && 'Native DEX & AMM Intelligence (XLS-30D)'}
+                  {activeDrawer === 'amendments' && 'Protocol Amendments & Consensus Upgrades'}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  setActiveDrawer(null);
+                }}
+                className="p-1 rounded-lg text-puls-400 hover:text-white bg-puls-850 hover:bg-puls-800 border border-puls-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+              {activeDrawer === 'rlusd' && (
+                <RlusdTracker metrics={rlusdMetrics} />
+              )}
+              {activeDrawer === 'amm' && (
+                <DexAmmPanel
+                  pools={ammPools}
+                  totalXrpLocked={totalXrpLocked}
+                  xrpPriceUsd={market.priceUsd}
+                  txDistribution={stats.txDistribution}
+                  totalSampled={stats.totalSampled}
+                  onRefresh={loadAmmAndAdoption}
+                  isLoading={isAmmLoading}
+                />
+              )}
+              {activeDrawer === 'amendments' && (
+                <AmendmentsPanel amendments={amendments} />
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-3 bg-puls-900 border-t border-puls-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setActiveDrawer(null)}
+                className="px-4 py-1.5 rounded-lg bg-puls-800 hover:bg-puls-700 text-white font-mono text-xs font-bold transition"
+              >
+                Close Drawer
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <footer className="border-t border-puls-850 bg-puls-950/80 py-6 px-4 sm:px-6 text-xs text-puls-500 font-mono">
+      <footer className="border-t border-puls-850 bg-puls-950/80 py-4 px-4 sm:px-6 text-xs text-puls-500 font-mono">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="font-bold text-white">Puls</span>
